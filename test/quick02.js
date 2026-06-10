@@ -1,7 +1,5 @@
-
 const Seneca = require('seneca')
 const Audit = require('../dist/audit')
-
 
 run()
 
@@ -25,20 +23,25 @@ async function auditCallback(data) {
 }
 
 async function mockup_data(seneca) {
-
-  await seneca.entity('sys/item').save$({ t_c: Date.now(), modified_by: 'Alex'})
-  await seneca.entity('sys/item').data$({ t_c: Date.now(), modified_by: 'Alice'}).save$()
-  await seneca.entity('sys/item').data$({ t_c: Date.now(), modified_by: 'John'}).save$()
-
+  await seneca
+    .entity('sys/item')
+    .save$({ t_c: Date.now(), modified_by: 'Alex' })
+  await seneca
+    .entity('sys/item')
+    .data$({ t_c: Date.now(), modified_by: 'Alice' })
+    .save$()
+  await seneca
+    .entity('sys/item')
+    .data$({ t_c: Date.now(), modified_by: 'John' })
+    .save$()
 }
 
 async function run() {
-
-  const seneca = await Seneca({ legacy:false })
+  const seneca = await Seneca({ legacy: false })
     .test()
     .use('entity', { mem_store: true })
     .use('promisify')
-    .use(Audit,{
+    .use(Audit, {
       active: true,
       auditCallback,
       intercept: {
@@ -51,12 +54,7 @@ async function run() {
 
   await mockup_data(seneca)
 
-  setTimeout(async ()=>{
+  setTimeout(async () => {
     console.dir(await seneca.entity('sys/audit').list$(), { depth: null })
   }, 1111)
-
-
 }
-
-
-
