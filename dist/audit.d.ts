@@ -12,3 +12,4 @@ declare function Audit(this: any, _options: Options): {
     };
 };
 export default Audit;
+//# sourceMappingURL=audit.d.ts.map
