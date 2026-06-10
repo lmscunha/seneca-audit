@@ -17,6 +17,7 @@
   },
   "scripts": {
     "prettier": "prettier --write .",
+    "prettier:check": "prettier --check .",
     "prettier:file": "prettier --write",
     "test": "node --enable-source-maps --test \"dist-test/**/*.test.js\"",
     "test-some": "node --enable-source-maps --test-name-pattern=\"$TEST_PATTERN\" --test \"dist-test/**/*.test.js\"",
