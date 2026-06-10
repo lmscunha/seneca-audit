@@ -2,9 +2,7 @@
 
 // import { Open } from 'gubu'
 
-
 // TODO: separate out errored messages
-
 
 type Options = {
   debug: boolean
@@ -18,38 +16,35 @@ type Options = {
 const defaults = {
   debug: false,
   active: false,
-  ignore: [ 'plugin: define', 'plugin: init' ],
+  ignore: ['plugin: define', 'plugin: init'],
   intercept: {},
-  auditCallback: function() {},
+  auditCallback: function () {},
 }
 
-
 export type AuditOptions = Partial<Options>
-
-
 
 function preload(this: any, plugin: any) {
   const seneca = this
   const root = seneca.root
   const options: AuditOptions = plugin.options
-  const auditCallback = (options.auditCallback || defaults.auditCallback).bind(seneca)
+  const auditCallback = (options.auditCallback || defaults.auditCallback).bind(
+    seneca,
+  )
   const ignore = options.ignore || defaults.ignore
   const intercept = options.intercept || defaults.intercept
-  
+
   const Patrun = seneca.util.Patrun
   const Jsonic = seneca.util.Jsonic
   const ignored = new Patrun({ gex: true })
   const intercepted = new Patrun({ gex: true })
-  
-  
 
-  const tdata = root.context.$_sys_Audit ??= {
+  const tdata = (root.context.$_sys_Audit ??= {
     active: options.active,
     msg: {},
     trace: {},
     runs: {},
-  }
-  
+  })
+
   /*
   // test
   async function auditCallback(this: any, msg: any) {
@@ -57,84 +52,85 @@ function preload(this: any, plugin: any) {
     await seneca.entity('sys/audit').save$({ msg, })
   }
   */
-  
-  
-  for(let ig of ignore) {
+
+  for (let ig of ignore) {
     ignored.add('string' == typeof ig ? Jsonic(ig) : ig, 1)
   }
-  
-  for(let st in intercept) {
+
+  for (let st in intercept) {
     // transform for optimization
     if (intercept[st].include && '*' === intercept[st].include) {
-      intercept[st].include = "*"
+      intercept[st].include = '*'
     } else {
       intercept[st].include = (intercept[st].include || []).reduce(
         (acc: any, v: any) => ((acc[v] = true), acc),
-        {}
+        {},
       )
     }
-      
-    intercept[st].exclude = (intercept[st].exclude || [])
-      .reduce((acc: any, v: any) => (acc[v] = true, acc), {})
-      
+
+    intercept[st].exclude = (intercept[st].exclude || []).reduce(
+      (acc: any, v: any) => ((acc[v] = true), acc),
+      {},
+    )
+
     intercepted.add('string' == typeof st ? Jsonic(st) : st, intercept[st])
   }
-  
 
-  root.order.inward.add((spec: any) => {
-  
-    if (!tdata.active) return null
+  root.order.inward.add(
+    (spec: any) => {
+      if (!tdata.active) return null
 
-    const actdef = spec.ctx.actdef
-    const meta = spec.data.meta
-    const msg = spec.data.msg
-    
-    if((actdef && 'Audit' == actdef.plugin_name)
-      || (msg && 0 != ignored.length && ignored.find(msg)) ) {
-      return
-    }
-    
-    // console.log('IN: ', msg, spec.data.meta.prior)
-    
-    if (actdef) {
-      const when = Date.now()
-      
-      const pat = actdef.pattern
-      const act = actdef.id
-      
-      let properties
-      
-      // console.log('IN', pat, actdef, meta)
-      
-      // TODO: Do we capture prior as well?
-      if ( (properties = intercepted.find(msg)) 
-        && null == meta.prior) {
-        let reducedMsg = {}
-        // console.log( properties, msg )
-        
-        const { include, exclude } = properties
-        reducedMsg = Object.entries(msg).reduce((acc: any, pair: any) => {
-          const [key, value] = pair
-          
-          if ('*' === include) {
-            // TODO: case for ( !key.endsWith('$') )
-            if(null == exclude[key]) { 
+      const actdef = spec.ctx.actdef
+      const meta = spec.data.meta
+      const msg = spec.data.msg
+
+      if (
+        (actdef && 'Audit' == actdef.plugin_name) ||
+        (msg && 0 != ignored.length && ignored.find(msg))
+      ) {
+        return
+      }
+
+      // console.log('IN: ', msg, spec.data.meta.prior)
+
+      if (actdef) {
+        const when = Date.now()
+
+        const pat = actdef.pattern
+        const act = actdef.id
+
+        let properties
+
+        // console.log('IN', pat, actdef, meta)
+
+        // TODO: Do we capture prior as well?
+        if ((properties = intercepted.find(msg)) && null == meta.prior) {
+          let reducedMsg = {}
+          // console.log( properties, msg )
+
+          const { include, exclude } = properties
+          reducedMsg = Object.entries(msg).reduce((acc: any, pair: any) => {
+            const [key, value] = pair
+
+            if ('*' === include) {
+              // TODO: case for ( !key.endsWith('$') )
+              if (null == exclude[key]) {
+                acc[key] = value
+              }
+            } else if (null != include[key] && null == exclude[key]) {
               acc[key] = value
             }
-          } else if (null != include[key] && null == exclude[key]) {
-            acc[key] = value
-          }
-          return acc
-        }, {})
-        
-        // console.log(reducedMsg)
-        
-        auditCallback({ meta, msg: reducedMsg })
-      }
-      
-    }
-  }, { after: 'announce' })
+            return acc
+          }, {})
 
+          // console.log(reducedMsg)
+
+          auditCallback({ meta, msg: reducedMsg })
+        }
+      }
+    },
+    { after: 'announce' },
+  )
 
   /*
   root.order.outward.add((spec: any) => {
@@ -157,17 +153,15 @@ function preload(this: any, plugin: any) {
   */
 }
 
-
 function Audit(this: any, _options: Options) {
   let seneca: any = this
   const root: any = seneca.root
 
   const tdata = root.context.$_sys_Audit
 
-  seneca
-    .fix('sys:audit')
-    
-    /*
+  seneca.fix('sys:audit')
+
+  /*
     .message('set:record', async function setRecord(this: any, msg: any) {
       
     })
@@ -175,8 +169,8 @@ function Audit(this: any, _options: Options) {
 
   return {
     exports: {
-      raw: () => tdata
-    }
+      raw: () => tdata,
+    },
   }
 }
 
