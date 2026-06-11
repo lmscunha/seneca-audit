@@ -25,5 +25,6 @@ describe('audit', () => {
   test('basic', async () => {
     const seneca = Seneca({ legacy: false }).test().use('promisify').use(Audit)
     await seneca.ready()
+    expect(seneca.find_plugin('Audit')).exist()
   })
 })
