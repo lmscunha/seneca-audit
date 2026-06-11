@@ -34,6 +34,7 @@ describe('audit', () => {
       .use('promisify')
       .use(Audit)
     await seneca.ready()
+    expect(seneca.find_plugin('Audit')).exist()
   })
 
 })
