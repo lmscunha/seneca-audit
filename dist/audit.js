@@ -20,12 +20,12 @@ function preload(plugin) {
     const Jsonic = seneca.util.Jsonic;
     const ignored = new Patrun({ gex: true });
     const intercepted = new Patrun({ gex: true });
-    const tdata = root.context.$_sys_Audit ??= {
+    const tdata = (root.context.$_sys_Audit ??= {
         active: options.active,
         msg: {},
         trace: {},
         runs: {},
-    };
+    });
     /*
     // test
     async function auditCallback(this: any, msg: any) {
@@ -39,13 +39,12 @@ function preload(plugin) {
     for (let st in intercept) {
         // transform for optimization
         if (intercept[st].include && '*' === intercept[st].include) {
-            intercept[st].include = "*";
+            intercept[st].include = '*';
         }
         else {
             intercept[st].include = (intercept[st].include || []).reduce((acc, v) => ((acc[v] = true), acc), {});
         }
-        intercept[st].exclude = (intercept[st].exclude || [])
-            .reduce((acc, v) => (acc[v] = true, acc), {});
+        intercept[st].exclude = (intercept[st].exclude || []).reduce((acc, v) => ((acc[v] = true), acc), {});
         intercepted.add('string' == typeof st ? Jsonic(st) : st, intercept[st]);
     }
     root.order.inward.add((spec) => {
@@ -54,8 +53,8 @@ function preload(plugin) {
         const actdef = spec.ctx.actdef;
         const meta = spec.data.meta;
         const msg = spec.data.msg;
-        if ((actdef && 'Audit' == actdef.plugin_name)
-            || (msg && 0 != ignored.length && ignored.find(msg))) {
+        if ((actdef && 'Audit' == actdef.plugin_name) ||
+            (msg && 0 != ignored.length && ignored.find(msg))) {
             return;
         }
         // console.log('IN: ', msg, spec.data.meta.prior)
@@ -66,8 +65,7 @@ function preload(plugin) {
             let properties;
             // console.log('IN', pat, actdef, meta)
             // TODO: Do we capture prior as well?
-            if ((properties = intercepted.find(msg))
-                && null == meta.prior) {
+            if ((properties = intercepted.find(msg)) && null == meta.prior) {
                 let reducedMsg = {};
                 // console.log( properties, msg )
                 const { include, exclude } = properties;
@@ -113,17 +111,16 @@ function Audit(_options) {
     let seneca = this;
     const root = seneca.root;
     const tdata = root.context.$_sys_Audit;
-    seneca
-        .fix('sys:audit');
+    seneca.fix('sys:audit');
     /*
-    .message('set:record', async function setRecord(this: any, msg: any) {
-      
-    })
-    */
+      .message('set:record', async function setRecord(this: any, msg: any) {
+        
+      })
+      */
     return {
         exports: {
-            raw: () => tdata
-        }
+            raw: () => tdata,
+        },
     };
 }
 Object.assign(Audit, { defaults, preload });
