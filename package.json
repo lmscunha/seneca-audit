@@ -42,7 +42,7 @@
     "seneca-promisify": "3.7.2",
     "@hapi/code": "^9.0.3",
     "@seneca/maintain": "^0.1.0",
-    "@types/node": "^25.0.9",
+    "@types/node": "^24.10.1",
     "@seneca/doc": "^8.0.0",
     "seneca-msg-test": "^4.1.0",
     "typescript": "^5.9.3"
