@@ -6,14 +6,10 @@ import { expect } from '@hapi/code'
 import Seneca from 'seneca'
 import SenecaMsgTest from 'seneca-msg-test'
 
-
 import Audit from '..'
 import AuditMessages from './audit.messages'
 
-
-
 describe('audit', () => {
-
   test('happy', async () => {
     expect(Audit).exist()
 
@@ -21,19 +17,13 @@ describe('audit', () => {
     await seneca.ready()
   })
 
-
   test('messages', async () => {
     const seneca = Seneca({ legacy: false }).test().use('promisify').use(Audit)
-    await (SenecaMsgTest(seneca, AuditMessages)())
+    await SenecaMsgTest(seneca, AuditMessages)()
   })
-
 
   test('basic', async () => {
-    const seneca = Seneca({ legacy: false })
-      .test()
-      .use('promisify')
-      .use(Audit)
+    const seneca = Seneca({ legacy: false }).test().use('promisify').use(Audit)
     await seneca.ready()
   })
-
 })
